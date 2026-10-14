@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PhishGuard — Demo Prototype</title>
+<style>
+:root{--bg:#0b1020;--card:#141c31;--line:#2a3654;--text:#eef3ff;--muted:#a8b4ce;--blue:#70a7ff}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(140deg,#0b1020,#111b32);color:var(--text);font:16px/1.5 system-ui,Arial,sans-serif}
+main{max-width:900px;margin:0 auto;padding:28px 16px 50px}.brand{display:flex;align-items:center;gap:12px;margin-bottom:24px}.logo{background:#213b67;border:1px solid #41649d;border-radius:14px;padding:10px;font-size:24px}.brand h1{font-size:22px;margin:0}.brand p{margin:2px 0;color:var(--muted);font-size:13px}
+.hero,.panel{background:rgba(20,28,49,.96);border:1px solid var(--line);border-radius:18px;padding:22px;margin-bottom:16px}.eyebrow{color:#8db7ff;text-transform:uppercase;letter-spacing:1.4px;font-size:12px;font-weight:700}.hero h2{margin:6px 0;font-size:clamp(25px,5vw,36px)}.hero p,.muted{color:var(--muted)}label{display:block;font-weight:650;margin-bottom:8px}textarea{width:100%;min-height:92px;background:#0b1224;color:var(--text);border:1px solid #354365;border-radius:12px;padding:13px;font:inherit;resize:vertical}button{border:0;border-radius:10px;padding:12px 16px;font:inherit;font-weight:700;cursor:pointer}.primary{background:#80adff;color:#091226;margin-top:12px}.secondary{background:#25324e;color:#e8efff;margin:5px 5px 0 0}.row{display:flex;gap:10px;flex-wrap:wrap}.result{display:none;margin-top:18px;padding:16px;border-radius:12px;background:#0b1224;border:1px solid var(--line)}.pill{display:inline-block;padding:4px 10px;border-radius:30px;font-weight:800;font-size:13px}.safe{background:#123d31;color:#8cf0c5}.suspicious{background:#493914;color:#ffdc81}.phishing{background:#4b202c;color:#ffabb7}.meter{height:8px;background:#2b3550;border-radius:20px;overflow:hidden;margin:8px 0 14px}.meter div{height:100%;width:0;background:#ffad70}.checks{padding-left:20px}.checks li{margin:5px 0}.note{font-size:12px;color:var(--muted);margin-top:14px}.samples{margin-top:12px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}.mini{background:#0c1428;border:1px solid var(--line);border-radius:12px;padding:14px}.mini strong{display:block;margin-bottom:4px}.mini p{margin:0;color:var(--muted);font-size:13px}footer{text-align:center;color:var(--muted);font-size:12px;padding:12px}
+</style></head>
+<body><main>
+<div class="brand"><div class="logo">🛡️</div><div><h1>PhishGuard AI</h1><p>Multi-source phishing detection • Prototype demo</p></div></div>
+<section class="hero"><div class="eyebrow">Cyber safety, made simple</div><h2>Check before you click.</h2><p>Paste a URL or suspicious message to see a sample risk assessment and safety advice.</p></section>
+<section class="panel">
+<label for="input">URL or message to check</label>
+<textarea id="input" placeholder="Example: Your bank account is locked. Verify immediately at http://bank-login-example.test"></textarea>
+<div class="row"><button class="primary" onclick="analyze()">Analyze threat</button><button class="secondary" onclick="sample('safe')">Try safe example</button><button class="secondary" onclick="sample('phish')">Try phishing example</button></div>
+<div class="result" id="result" aria-live="polite"><div class="row" style="justify-content:space-between;align-items:center"><h3 id="heading" style="margin:0">Assessment</h3><span class="pill" id="pill"></span></div><p id="summary"></p><strong>Demo risk score: <span id="score"></span>/100</strong><div class="meter"><div id="bar"></div></div><strong>Signals observed</strong><ul class="checks" id="signals"></ul><strong>Recommended action</strong><p id="action"></p></div>
+<p class="note">Important: This is a front-end demonstration using simple rules, not a trained AI model or live URL reputation service. Do not paste passwords, private messages, or confidential information.</p>
+</section>
+<section class="panel"><h3 style="margin-top:0">How the prototype works</h3><div class="grid"><div class="mini"><strong>1. Input</strong><p>Accepts a URL or message for checking.</p></div><div class="mini"><strong>2. Signal analysis</strong><p>Looks for urgency, credential requests, URL patterns, and suspicious wording.</p></div><div class="mini"><strong>3. Risk result</strong><p>Shows Safe, Suspicious, or Phishing with a score and advice.</p></div></div></section>
+<footer>Student prototype • Illustrative results only • Always verify suspicious messages independently.</footer>
+</main>
+<script>
+function sample(type){document.getElementById('input').value=type==='safe'?'https://www.example.com — Please find the public information page here.':'URGENT: Your account is suspended! Verify your password now at http://secure-login-verify.example.test';analyze()}
+function analyze(){
+ const text=document.getElementById('input').value.trim(); if(!text){alert('Enter a URL or message first.');return}
+ const s=text.toLowerCase(), signals=[];let score=5;
+ const rules=[
+  [/urgent|immediately|act now|within 24 hours|suspended|locked|limited time/,'Urgent or threatening language',20],
+  [/password|otp|one.time password|pin|bank details|credit card|verify your account|login now/,'Requests sensitive information or account verification',25],
+  [/bit\.ly|tinyurl|t\.co|cutt\.ly|shorturl/,'URL-shortening service detected',15],
+  [/http:\/\//,'Unencrypted HTTP link present',15],
+  [/@/,'Contains an @ symbol that may be misleading in a URL or message',8],
+  [/gift card|you won|prize|claim your reward|payment failed/,'Common bait or payment-related wording',15],
+  [/[0-9]{4,}/,'Long number sequence detected; verify context',5]
+ ];
+ rules.forEach(([re,label,pts])=>{if(re.test(s)){signals.push(label);score+=pts}});
+ if(/https:\/\/[a-z0-9.-]+\.[a-z]{2,}/i.test(text))signals.push('HTTPS URL format detected (HTTPS alone does not prove safety)');
+ if(!signals.length)signals.push('No obvious demo-rule indicators found; this does not guarantee safety.');
+ score=Math.min(95,score);let level=score>=60?'Phishing':score>=30?'Suspicious':'Safe';let cls=level.toLowerCase();
+ document.getElementById('result').style.display='block';document.getElementById('heading').textContent='Analysis result';let pill=document.getElementById('pill');pill.textContent=level.toUpperCase();pill.className='pill '+cls;
+ document.getElementById('summary').textContent=level==='Phishing'?'Several warning signs were detected. Treat this as potentially malicious.':level==='Suspicious'?'Some warning signs were detected. Verify the sender and destination independently.':'Few warning signs were detected by this simple demo. Still verify the source before interacting.';
+ document.getElementById('score').textContent=score;document.getElementById('bar').style.width=score+'%';document.getElementById('signals').innerHTML=signals.map(x=>'<li>'+x.replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</li>').join('');
+ document.getElementById('action').textContent=level==='Phishing'?'Do not click the link or share information. Open the official app/site yourself and report the message.':level==='Suspicious'?'Do not use the provided link yet. Contact the organization through an official channel.':'No obvious signs found by this demo. Check the exact domain and sender; never share OTPs or passwords.';
+}
+</script></body></html>
